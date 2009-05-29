@@ -11,10 +11,9 @@ shared_examples_for "Handler" do
   end
 
   it "should pass packets to a callback" do
-    @pcap.callback do |user,pkthdr,bytes|
-      hdr = PacketHeader.new(pkthdr)
-      hdr.captured.should_not == 0
-      hdr.length.should_not == 0
+    @pcap.callback do |user,header,bytes|
+      header.captured.should_not == 0
+      header.length.should_not == 0
 
       bytes.should_not be_null
     end
@@ -33,6 +32,19 @@ shared_examples_for "Handler" do
     data.should_not be_null
   end
 
+  it "should be able to open a dump file" do
+    lambda {
+      dumper = @pcap.open_dump(Tempfile.new.path)
+      dumper.close
+    }.should_not raise_error(RuntimeError)
+  end
+
+  it "should raise an exception when opening a bad dump file" do
+    lambda {
+      @pcap.open_dump(File.join('','obviously','not','there'))
+    }.should raise_error(RuntimeError)
+  end
+
   it "should return an empty String when an error has not occurred" do
     @pcap.error.should be_empty
   end
@@ -46,5 +58,14 @@ shared_examples_for "Handler" do
     end
 
     stopped.should == true
+  end
+
+  it "should prevent double closes" do
+    @pcap.close
+    @pcap.should be_closed
+
+    lambda {
+      @pcap.close
+    }.should_not raise_error(StandardError)
   end
 end

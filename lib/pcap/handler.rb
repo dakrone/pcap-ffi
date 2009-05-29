@@ -24,6 +24,7 @@ module FFI
 
       def initialize(pcap,options={},&block)
         @pcap = pcap
+        @closed = false
 
         # Default is to infinitely loop over packets.
         @count = (options[:count] || -1)
@@ -32,12 +33,15 @@ module FFI
           self.direction = options[:direction]
         end
 
-        if block
-          callback(&block)
-        else
-          # Default the callback to an empty Proc
-          @callback = Proc.new {}
+        @callback_wrapper = Proc.new do |user,header,bytes|
+          if @callback
+            @callback.call(user,PacketHeader.new(header),bytes)
+          end
         end
+
+        callback(&block)
+
+        trap('SIGINT') { self.close }
       end
 
       def datalink
@@ -45,10 +49,7 @@ module FFI
       end
 
       def callback(&block)
-        if block
-          @callback = block
-        end
-
+        @callback = block
         return @callback
       end
 
@@ -87,7 +88,7 @@ module FFI
       def loop(data=nil,&block)
         callback(&block) if block
 
-        PCap.pcap_loop(@pcap,@count,@callback,data)
+        PCap.pcap_loop(@pcap,@count,@callback_wrapper,data)
       end
 
       alias each loop
@@ -95,7 +96,7 @@ module FFI
       def dispatch(data=nil,&block)
         callback(&block) if block
 
-        PCap.pcap_dispatch(@pcap,@count,@callback,data)
+        return PCap.pcap_dispatch(@pcap,@count,@callback_wrapper,data)
       end
 
       def next
@@ -145,8 +146,15 @@ module FFI
         PCap.pcap_breakloop(@pcap)
       end
 
+      def closed?
+        @closed == true
+      end
+
       def close
-        PCap.pcap_close(@pcap)
+        unless @closed
+          @closed = true
+          PCap.pcap_close(@pcap)
+        end
       end
 
       def to_ptr
