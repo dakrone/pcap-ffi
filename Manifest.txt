@@ -8,6 +8,7 @@ lib/pcap/exceptions.rb
 lib/pcap/exceptions/read_error.rb
 lib/pcap/typedefs.rb
 lib/pcap/time_val.rb
+lib/pcap/mac_addr.rb
 lib/pcap/in_addr.rb
 lib/pcap/sock_addr.rb
 lib/pcap/sock_addr_in.rb
@@ -18,8 +19,13 @@ lib/pcap/packet_header.rb
 lib/pcap/packet.rb
 lib/pcap/packets.rb
 lib/pcap/packets/typedefs.rb
+lib/pcap/packets/fddi.rb
 lib/pcap/packets/ethernet.rb
 lib/pcap/packets/ip.rb
+lib/pcap/packets/icmp.rb
+lib/pcap/packets/icmp/data.rb
+lib/pcap/packets/icmp/echo.rb
+lib/pcap/packets/icmp/frag.rb
 lib/pcap/packets/tcp.rb
 lib/pcap/stat.rb
 lib/pcap/data_link.rb
