@@ -1,3 +1,5 @@
+require 'pcap/extensions/ffi/struct/array'
+
 module FFI
   module PCap
     module Packet
@@ -5,6 +7,9 @@ module FFI
         base.module_eval do
           # previous packet in the payload
           attr_reader :prev
+
+          def self.release(ptr)
+          end
         end
       end
 
