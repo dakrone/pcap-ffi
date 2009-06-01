@@ -6,6 +6,7 @@ examples/print_bytes.rb
 lib/pcap.rb
 lib/pcap/exceptions.rb
 lib/pcap/exceptions/read_error.rb
+lib/pcap/exceptions/unsupported_datalink.rb
 lib/pcap/extensions.rb
 lib/pcap/extensions/ffi.rb
 lib/pcap/extensions/ffi/exceptions.rb
@@ -26,8 +27,10 @@ lib/pcap/packet_header.rb
 lib/pcap/packet.rb
 lib/pcap/packets.rb
 lib/pcap/packets/typedefs.rb
+lib/pcap/packets/raw.rb
 lib/pcap/packets/fddi.rb
 lib/pcap/packets/ethernet.rb
+lib/pcap/packets/token_ring.rb
 lib/pcap/packets/ip.rb
 lib/pcap/packets/icmp.rb
 lib/pcap/packets/icmp/data.rb

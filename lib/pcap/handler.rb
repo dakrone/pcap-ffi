@@ -4,6 +4,7 @@ require 'pcap/error_buffer'
 require 'pcap/data_link'
 require 'pcap/packet_header'
 require 'pcap/stat'
+require 'pcap/packets/raw'
 
 require 'ffi'
 
@@ -38,9 +39,12 @@ module FFI
           self.direction = options[:direction]
         end
 
-        @callback_wrapper = Proc.new do |user,header,bytes|
+        @callback_wrapper = Proc.new do |user,pkthdr,bytes|
           if @callback
-            @callback.call(user,PacketHeader.new(header),bytes)
+            header = PacketHeader.new(pkthdr)
+            raw = Packets::Raw.new(bytes,header.captured,@datalink)
+
+            @callback.call(user,header,raw)
           end
         end
 
@@ -102,24 +106,29 @@ module FFI
 
       def next
         header = PacketHeader.new
-        data = PCap.pcap_next(@pcap,header)
+        bytes = PCap.pcap_next(@pcap,header)
 
-        return [nil, nil] if data.null?
-        return [header, data]
+        return [nil, nil] if bytes.null?
+
+        raw = Packets::Raw.new(bytes,header.captured,@datalink)
+        return [header, raw]
       end
 
       def next_extra
         header_ptr = MemoryPointer.new(:pointer)
-        data_ptr = MemoryPointer.new(:pointer)
+        bytes_ptr = MemoryPointer.new(:pointer)
 
-        case PCap.pcap_next_ex(@pcap,header_ptr,data_ptr)
+        case PCap.pcap_next_ex(@pcap,header_ptr,bytes_ptr)
         when -1
           raise(ReadError,"an error occurred while reading the packet",caller)
         when -2
           raise(ReadError,"the 'savefile' contains no more packets",caller)
         end
 
-        return [header_ptr.get_pointer(0), data_ptr.get_pointer(0)]
+        header = header_ptr.get_pointer(0)
+        raw = Packets::Raw.new(bytes_ptr.get_pointer(0),header.captured,@datalink)
+
+        return [header, raw]
       end
 
       def open_dump(path)
